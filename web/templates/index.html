@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMDB Dataset Explorer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>IMDB Dataset Explorer</h1>
+            <div class="search-bar">
+                <input type="text" id="search" placeholder="Search by name...">
+                <button id="search-btn">Search</button>
+            </div>
+        </header>
+        
+        <div class="layout">
+            <div class="names-sidebar">
+                <h3>Celebrity Names</h3>
+                <div id="names-list" class="names-list">
+                    <!-- Names will be loaded here -->
+                </div>
+            </div>
+            
+            <div class="main-content">
+            <div class="image-viewer">
+                <img id="current-image" src="" alt="No image selected">
+            </div>
+            
+            <div class="metadata-panel">
+                <h2>Metadata</h2>
+                <table id="metadata-table">
+                    <tr><th>Field</th><th>Value</th></tr>
+                    <tr><td>Name</td><td id="meta-name">-</td></tr>
+                    <tr><td>Gender</td><td id="meta-gender">-</td></tr>
+                    <tr><td>Age</td><td id="meta-age">-</td></tr>
+                    <tr><td>DOB</td><td id="meta-dob">-</td></tr>
+                    <tr><td>Photo Taken</td><td id="meta-photo-taken">-</td></tr>
+                    <tr><td>Face Location</td><td id="meta-face-location">-</td></tr>
+                    <tr><td>Celebrity ID</td><td id="meta-celeb-id">-</td></tr>
+                    <tr><td>File Path</td><td id="meta-path">-</td></tr>
+                </table>
+            </div>
+            </div>
+        </div>
+        
+        <div class="pagination">
+            <button id="prev-btn" disabled>Previous</button>
+            <span id="page-info">Page 1</span>
+            <button id="next-btn">Next</button>
+            <span id="scroll-info" style="display: none; margin-left: 10px; font-style: italic;">Scroll to load more</span>
+        </div>
+        
+        <div class="image-list" id="image-list">
+            <!-- Images will be loaded here -->
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

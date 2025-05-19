@@ -1,0 +1,53 @@
+# Ignore the dataset if it's already downloaded locally to prevent copying
+imdb_crop/
+
+# Ignore temporary files
+*.tmp
+*.log
+*.swp
+
+# Ignore Git-related files
+.git/
+.gitignore
+
+# Ignore Docker-related files (to prevent recursive copying)
+docker/
+Dockerfile
+.dockerignore
+
+# Ignore any CSV or output files that may be large
+*.csv
+*.mat
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environment
+venv/
+ENV/
+env/
+
+# IDE specific files
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project

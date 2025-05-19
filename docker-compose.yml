@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  imdb-explorer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5050:5000"
+    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1
+    # Mount the dataset directory for persistence
+    volumes:
+       - ./imdb_crop:/workspace/imdb/imdb_crop

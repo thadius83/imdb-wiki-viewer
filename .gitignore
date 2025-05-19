@@ -1,0 +1,63 @@
+# IMDB Dataset Explorer .gitignore
+
+# Ignore the dataset files (very large)
+/imdb_crop/
+imdb_crop.tar
+
+# Ignore generated CSV files
+*.csv
+*.tsv
+
+# Ignore MATLAB data files
+*.mat
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Docker temporary files
+.dockerenv
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Virtual environment
+venv/
+ENV/
+env/
+
+# IDE specific files
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# OS specific files
+.DS_Store
+Thumbs.db
