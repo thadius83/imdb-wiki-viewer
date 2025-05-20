@@ -43,7 +43,20 @@ print("IMDB[0][0] fields count:", len(imdb[0][0]))
 
 # Extract IMDB fields
 print("Extracting IMDB fields...")
-imdb_dob = imdb[0][0][0][0]  # date of birth (Matlab serial date number)
+try:
+    # Print the first field names for debugging
+    field_names = [str(f) for f in imdb[0][0].dtype.names]
+    print(f"IMDB data fields: {field_names}")
+except Exception as e:
+    print(f"Could not extract field names: {e}")
+
+try:
+    imdb_dob = imdb[0][0][0][0]  # date of birth (Matlab serial date number)
+    print(f"DOB field type: {type(imdb_dob)}, shape: {imdb_dob.shape}")
+except Exception as e:
+    print(f"Error extracting DOB field: {e}")
+    imdb_dob = np.array([np.nan] * 10000)  # Create dummy data if extraction fails
+
 imdb_photo_taken = imdb[0][0][1][0]  # year when the photo was taken
 imdb_full_path = imdb[0][0][2][0]  # path to file
 imdb_gender = imdb[0][0][3][0]  # 0 for female and 1 for male, NaN if unknown
@@ -226,59 +239,135 @@ print(f"Processed {len(wiki_face_locs)} Wiki face locations")
 
 # Convert MATLAB datenum to Python date
 def matlab_datenum_to_datetime(datenum):
-    # MATLAB datenum starts from 0 at 0000-01-00, while Python's starts from 1 at 0001-01-01
-    # MATLAB datenum 1 corresponds to 0001-01-01 in Python datetime
-    # Need to adjust the difference in days accordingly
-    days = datenum - 366  # 366 days difference between MATLAB's 0000-01-00 and Python's 0001-01-01
-    return date.datetime.fromordinal(int(days)) + date.timedelta(days=days % 1)
+    try:
+        # Check if input is valid
+        if np.isnan(datenum) or datenum <= 0:
+            return None
+            
+        # Explicitly convert numpy types to Python built-ins to avoid type issues
+        datenum_float = float(datenum)
+        
+        # MATLAB datenum starts from 0 at 0000-01-00, while Python's starts from 1 at 0001-01-01
+        # MATLAB datenum 1 corresponds to 0001-01-01 in Python datetime
+        days = datenum_float - 366  # 366 days difference between MATLAB's 0000-01-00 and Python's 0001-01-01
+        
+        # Create the datetime object
+        result_date = date.datetime.fromordinal(max(1, int(days)))
+        
+        # Explicitly convert fractional days to Python float
+        fractional_day = float(days % 1)
+        result_date += date.timedelta(days=fractional_day)
+        
+        # Sanity check - if year is too far in past or future, it's likely wrong
+        if result_date.year < 1850 or result_date.year > 2025:
+            return None
+            
+        return result_date
+    except Exception as e:
+        # Only show a sample of errors to avoid flooding the console
+        if np.random.random() < 0.01:  # Show roughly 1% of errors
+            print(f"Error converting date: {e}, datenum: {datenum}")
+        return None
 
-# Format dates in human-readable format
+# Print debugging information about DOB field
+print(f"IMDB DOB field shape: {imdb_dob.shape}")
+print(f"IMDB DOB sample values: {imdb_dob[:5]}")  # Show first 5 values
+
+# Format dates in human-readable format with better debugging
 imdb_formatted_dob = []
 wiki_formatted_dob = []
+dob_success_count = 0
 
-for datenum in imdb_dob:
+for i, datenum in enumerate(imdb_dob):
     try:
         dt = matlab_datenum_to_datetime(datenum)
-        imdb_formatted_dob.append(dt.strftime('%Y-%m-%d'))
-    except:
+        if dt:
+            formatted_date = dt.strftime('%Y-%m-%d')
+            imdb_formatted_dob.append(formatted_date)
+            dob_success_count += 1
+        else:
+            imdb_formatted_dob.append('unknown')
+    except Exception as e:
+        print(f"Error formatting DOB at index {i}: {e}, value: {datenum}")
         imdb_formatted_dob.append('unknown')
+
+print(f"Successfully extracted {dob_success_count} dates of birth out of {len(imdb_dob)}")
 
 for datenum in wiki_dob:
     try:
         dt = matlab_datenum_to_datetime(datenum)
-        wiki_formatted_dob.append(dt.strftime('%Y-%m-%d'))
+        if dt:
+            wiki_formatted_dob.append(dt.strftime('%Y-%m-%d'))
+        else:
+            wiki_formatted_dob.append('unknown')
     except:
         wiki_formatted_dob.append('unknown')
 
 # Calculate ages
 imdb_age = []
 wiki_age = []
+age_success_count = 0
 
+# Print a sample of photo_taken values to debug
+print(f"Sample photo_taken values: {imdb_photo_taken[:5]}")
+print(f"Photo taken type: {type(imdb_photo_taken)}, shape: {imdb_photo_taken.shape}")
+
+print("Calculating ages...")
 for i in range(len(imdb_formatted_dob)):
     try:
         if imdb_formatted_dob[i] != 'unknown':
             d1 = date.datetime.strptime(imdb_formatted_dob[i], '%Y-%m-%d')
-            d2 = date.datetime.strptime(str(imdb_photo_taken[i]), '%Y')
-            rdelta = relativedelta(d2, d1)
-            diff = rdelta.years
+            
+            # Convert numpy type to Python type
+            photo_year = int(imdb_photo_taken[i])
+            
+            # Check if photo_taken value is valid
+            if photo_year > 1900 and photo_year < 2023:  # Reasonable year range
+                d2 = date.datetime(year=photo_year, month=1, day=1)
+                diff = d2.year - d1.year
+                
+                # Adjust age if birthday hasn't occurred yet in the photo year
+                if d2.month < d1.month or (d2.month == d1.month and d2.day < d1.day):
+                    diff -= 1
+                
+                # Sanity check - if age is negative or over 100, it's likely wrong
+                if diff < 0 or diff > 100:
+                    diff = -1
+                else:
+                    age_success_count += 1
+            else:
+                diff = -1
         else:
             diff = -1
     except Exception as ex:
-        print(f"Error calculating age: {ex}")
+        if i < 5:  # Only show first few errors
+            print(f"Error calculating age at index {i}: {ex}, dob: {imdb_formatted_dob[i]}, photo_year: {imdb_photo_taken[i]}")
         diff = -1
     imdb_age.append(diff)
+
+print(f"Successfully calculated {age_success_count} ages out of {len(imdb_formatted_dob)}")
 
 for i in range(len(wiki_formatted_dob)):
     try:
         if wiki_formatted_dob[i] != 'unknown':
             d1 = date.datetime.strptime(wiki_formatted_dob[i], '%Y-%m-%d')
-            d2 = date.datetime.strptime(str(wiki_photo_taken[i]), '%Y')
-            rdelta = relativedelta(d2, d1)
-            diff = rdelta.years
+            
+            # Check if photo_taken value is valid
+            if isinstance(wiki_photo_taken[i], (int, float)) and not np.isnan(wiki_photo_taken[i]) and wiki_photo_taken[i] > 1900:
+                d2 = date.datetime(year=int(wiki_photo_taken[i]), month=1, day=1)
+                rdelta = relativedelta(d2, d1)
+                diff = rdelta.years
+                
+                # Sanity check - if age is negative or over 100, it's likely wrong
+                if diff < 0 or diff > 100:
+                    diff = -1
+            else:
+                diff = -1
         else:
             diff = -1
     except Exception as ex:
-        print(f"Error calculating age: {ex}")
+        if i < 10:  # Only show first few errors to avoid flooding
+            print(f"Error calculating wiki age: {ex}")
         diff = -1
     wiki_age.append(diff)
 
